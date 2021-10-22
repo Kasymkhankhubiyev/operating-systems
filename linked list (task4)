@@ -24,7 +24,7 @@ void pop(List *list) { //очистка листа
         if (current_list->string) { //очищаем строку
             free(current_list->string);
         }
-        List *to_delete = current_list;
+        List *to_delete = current_list; 
         current_list = current_list->next;
         free(to_delete);
     }
