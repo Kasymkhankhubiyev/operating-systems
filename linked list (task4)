@@ -67,8 +67,17 @@ int main() {
     char string[STRING_MAX_SIZE];
     List *list = NULL;
     printf("Enter your strings. String ends with \".\" :\n");
-    if (fgets(string, STRING_MAX_SIZE, stdin) != NULL) { //безопасное считывание полной строки до первого перехода \n
-        while (*(fgets(string, STRING_MAX_SIZE, stdin)) != '.') { //пока нет точки или длина удовлетворительна
+    if (fgets(string, STRING_MAX_SIZE, stdin) != NULL) { //проверяем, не пустой ли буффер, но тут мы уже считали первую строку! поэтому нужжно сразу обработать
+    size_t string_lenght = strlen(string); //получаем длину строки !strlen не учитывает нулевого символа на конце!
+            char *tmp = (char *) malloc(string_lenght); //выделяем память под длину строки
+            if (tmp) {
+                memcpy(tmp, string, string_lenght); //копирование одной области памяти в другую с указанием длины
+                if (tmp[string_lenght - 1] == '\n') { //добавляем нулевой символ
+                    tmp[string_lenght - 1] = '\0';
+                }
+                push(&list, tmp); //добавляем строку с учетом сущесвующего списка
+            }
+        while (*(fgets(string, STRING_MAX_SIZE, stdin)) != '.') { //пока нет точки, считываем только в пределах максимальной длины с учетом места для нулевого символа строки
             size_t string_lenght = strlen(string); //получаем длину строки !strlen не учитывает нулевого символа на конце!
             char *tmp = (char *) malloc(string_lenght); //выделяем память под длину строки
             if (tmp) {
