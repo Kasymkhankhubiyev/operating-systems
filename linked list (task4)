@@ -18,39 +18,31 @@ void print_strings(List *list);
 void push(List **list, char *string);
 
 int main() {
-    char string[STRING_MAX_SIZE];
-    List *list = NULL;
-    printf("Enter your strings. String ends with \".\" :\n");
-    if (fgets(string, STRING_MAX_SIZE, stdin) != NULL) { //проверяем, не пустой ли буффер, но тут мы уже считали первую строку! поэтому нужжно сразу обработать
-    size_t string_lenght = strlen(string); //получаем длину строки !strlen не учитывает нулевого символа на конце!
-            char *tmp = (char *) malloc(string_lenght); //выделяем память под длину строки
-            if (tmp) {
-                memcpy(tmp, string, string_lenght); //копирование одной области памяти в другую с указанием длины
-                if (tmp[string_lenght - 1] == '\n') { //добавляем нулевой символ
-                    tmp[string_lenght - 1] = '\0';
-                }
-                push(&list, tmp); //добавляем строку с учетом сущесвующего списка
-            }
-        while (*(fgets(string, STRING_MAX_SIZE, stdin)) != '.') { //пока нет точки, считываем только в пределах максимальной длины с учетом места для нулевого символа строки
-            size_t string_lenght = strlen(string); //получаем длину строки !strlen не учитывает нулевого символа на конце!
-            char *tmp = (char *) malloc(string_lenght); //выделяем память под длину строки
-            if (tmp) {
-                memcpy(tmp, string, string_lenght); //копирование одной области памяти в другую с указанием длины
-                if (tmp[string_lenght - 1] == '\n') { //добавляем нулевой символ
-                    tmp[string_lenght - 1] = '\0';
-                }
-                push(&list, tmp); //добавляем строку с учетом сущесвующего списка
-            }
-        }
-        print_strings(list); //выводим список
-        pop(list); очищаем
+ int i = 0;
+ char string[STRING_MAX_SIZE];
+ List *list = NULL;
+ printf("Enter your strings. String ends with \".\" :\n");
+ while (*(fgets(string, STRING_MAX_SIZE, stdin)) != '.') {
+  if(string!= NULL){
+   size_t string_lenght = strlen(string);
+   char *tmp = (char *) malloc(string_lenght);
+   if (tmp) {
+    memcpy(tmp, string, string_lenght);
+    if (tmp[string_lenght - 1] == '\n') {
+     tmp[string_lenght - 1] = '\0';
     }
-    else {
-        perror("fgets return NULL\n");
-        exit(-1);
-    }
-    return 0;
+    push(&list, tmp);
+   }
+  }else {
+    perror("fgets return NULL\n");
+    return -1;
+  }
+ }
+  print_strings(list);
+  pop(list);
+ return 0;
 }
+
 
 List *init_List() { //инициализируем лист
     List *list = (List *) malloc(sizeof(List)); //выделяем память под структуру, должны будем сами очищать
