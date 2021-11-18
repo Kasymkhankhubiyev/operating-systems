@@ -112,7 +112,7 @@ int user_interaction(int fd, off_t *enteries, int strings_amount){
    printf("You inputed a number over the file bound. \n Please, enter from 1 to %d \n", strings_amount);
    continue;
   }
-  printLine(fd, *enteries, str_number);
+  printLine(fd, enteries, str_number);
  }
  
  return 0;
@@ -133,7 +133,7 @@ int main (){
   return -1;
  }
  lseek(fd, 0l, SEEK_SET);
- int stings_amount = parseFile(fd, file_size, enteries);
+ int strings_amount = parseFile(fd, file_size, enteries);
  if(strings_amount == -1){
   printf("Errors while file parsing.\n");
   return -1;
