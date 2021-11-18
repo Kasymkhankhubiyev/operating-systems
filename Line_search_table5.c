@@ -25,7 +25,7 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
    return -1;
   }
   if(read_str_size == -1){
-   if(errno == EINVR || errno == EAGAIN) //maybe file was used by another process
+   if(errno == EINTR || errno == EAGAIN) //maybe file was used by another process
     continue;
    else {
     perror("Error while reading.\n");
@@ -36,7 +36,7 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
   int indicator = 0; 
   int i = 0;
   while(i < read_str_size){
-   if(buff[i] == '/n'){
+   if(buff[i] == '\n'){
     if(indicator == 0){
      strings_arr[0] = i;
      indicator = 1;
@@ -46,7 +46,7 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
    }
    i++;  
   }
-  if(position > filesize)
+  if(position > file_size)
    break;
   position += read_str_size; 
  }
@@ -89,7 +89,7 @@ void printLine(int fd, off_t *enteries, int str_number){
 int user_interaction(int fd, off_t *enteries, int strings_amount){
 
  int str_number = 1;
- while(string_number){
+ while(str_number){
   
   printf("Please, enter non-negative string number: \n");
   printf(" Enter 0 to exit.\n");
@@ -127,14 +127,14 @@ int main (){
   return -1;
  }
  off_t enteries[MAX_LINES];
- int file_size = lseek(fd, 0L, SEK_END);
+ int file_size = lseek(fd, 0L, SEEK_END);
  if(file_size == -1){
   printf("Something went wrong while seeking");
   return -1;
  }
  lseek(fd, 0l, SEEK_SET);
  int stings_amount = parseFile(fd, file_size, enteries);
- if(string_amount == -1){
+ if(strings_amount == -1){
   printf("Errors while file parsing.\n");
   return -1;
  } 
