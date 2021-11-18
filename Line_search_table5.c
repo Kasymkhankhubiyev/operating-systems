@@ -6,119 +6,142 @@
 #include <stdlib.h>
 
 #define MAX_BUFF 200
-#define MAX_LINES 50
+#define MAX_LINES 100
 
-char buffer[MAX_BUFF];
 
-typedef struct Line_entry {
- off_t offset;
- unsigned int length;
-}Line_entry;
+int parseFile(int fd, int file_size, off_t *strings_arr){
 
-int build_table(int fd, Line_entry *table, unsigned int max_size) {
- int current_line = 1;
- int current_position = 0;
- table[1].offset = 0L;
- while (true) {
-  int read_amount = read(fd, buffer, MAX_BUFF);
-  if (read_amount == 0) {
-   fprintf(stderr, "End of file\n");
-   break;
+ int count = 0;
+ char buff[MAX_LINES];
+ int read_str_size = 0;
+ int position = 0;
+ 
+ strings_arr[0] = 0;
+ while(1){
+  lseek(fd, position, SEEK_SET);
+  read_str_size = read(fd, buff, MAX_LINES);
+  if(read_str_size == 0){
+   printf("FILE is empty./n");
+   return -1;
   }
-  if (read_amount == -1) {
-   if (errno == EINTR || errno == EAGAIN) //EINTR - Interrupted function call //EAGAIN - The resource is temporarily unavailable
+  if(read_str_size == -1){
+   if(errno == EINVR || errno == EAGAIN) //maybe file was used by another process
     continue;
    else {
-    fprintf(stderr, "Error at building_table() in READ():");
+    perror("Error while reading.\n");
     return -1;
    }
   }
-  unsigned int = 0;
-  while (i < read_amount) {
-   current_position++;
-   if (buffer[i] == '\n') {
-    table[current_line].length = current_position - 1;
-    if (current_line == max_size) {
-     fprintf(stderr, "Long file, wait while read %d lines\n");
-     return current_line - 1;
+  
+  int indicator = 0; 
+  int i = 0;
+  while(i < read_str_size){
+   if(buff[i] == '/n'){
+    if(indicator == 0){
+     strings_arr[0] = i;
+     indicator = 1;
     }
-    table[current_line + 1].offset = table[current_line].offset + current_position;
-    current_line++;
-    current_position = 0;
+    count ++;
+    strings_arr[count] = position + i;
    }
-   i++;
+   i++;  
   }
+  if(position > filesize)
+   break;
+  position += read_str_size; 
  }
- table[current_line].length = current_position;
- return current_line;
+ 
+ return count;
+
 }
 
-void print_line(int fd, Line_entry line_entry) {
- lseek(fd, line_entry.offset, SEEK_SET);
- unsigned int bytes_read;
- unsigned int i = 0;
- while (i < line_entry.length) {
-  if (MAX_BUFF > line_entry.length - i)
-   bytes_read = line_entry.length - i;
-  else
-   bytes_read = MAX_BUFF;
-  if (read(fd, buffer, bytes_read) == -1) {
-   fprintf(stderr, "Error at print_line() READ(): ");
-   return -1;
-  }
-  if (write(STDOUT_FILENO, buffer, bytes_read) == -1) {
-   fprintf(stderr, "Error at print_line() WRITE(): ");
-   return -1;
-  }
-  i+=MAX_BUFF;
+
+void printLine(int fd, off_t *enteries, int str_number){
+
+ off_t bytes_amount = enteries[str_number] - enteries[str_number - 1] - 1;
+ off_t starter_byte = enteries[str_number - 1] + 1;
+ 
+ if(str_number == 1){
+  bytes_amount = enteries[1];
+  starter_byte = 0;
  }
+ 
+ lseek(fd, starter_byte, SEEK_SET);
+ char buff[MAX_LINES];
+ 
+ while(bytes_amount > 0){
+  int bytes_read = read(fd, buff, MAX_LINES);
+  bytes_amount -= bytes_read;
+  if(bytes_amount >= 0)
+   printf("%s", buff);
+  else{
+   int i = 0;
+   while(i< bytes_amount + bytes_read){
+    printf("%c", buff[i]);
+    i ++;
+   }  
+  } 
+ }
+ printf("\n");
 }
 
-int print_table(int fd, Line_entry *table, unsigned int table_size) {
- printf("Lines amount: [%d,%d]\n", 1, table_size - 1);
- int scan_line = 1;
- while (true) {
-  printf("print line number: ");
-  scanf("%d", &scan_line);
-  if (scan_line < 0 || scan_line > table_size) {
-   fprintf(stderr, "This line doesn't exist, try again\n");
+
+int user_interaction(int fd, off_t *enteries, int strings_amount){
+
+ int str_number = 1;
+ while(string_number){
+  
+  printf("Please, enter non-negative string number: \n");
+  printf(" Enter 0 to exit.\n");
+  scanf("%d", &str_number);
+  
+  if(str_number == 0){
+   if(close(fd) == -1){
+    perror("File close error.\n");
+    return -1;
+   }
+   break;
+  }
+  
+  if(str_number < 0){
+   printf("You inputed a negative number. Try agan \n");
+   continue; 
+  }
+  
+  if(str_number > strings_amount){
+   printf("You inputed a number over the file bound. \n Please, enter from 1 to %d \n", strings_amount);
    continue;
   }
-  if (scan_line == 0) {
-   close(fd);
-   if (close(fd) == -1) {
-    fprintf(stderr, "Close error\n");
-    return -1;
-   }
-  }
-  print_line(fd, table[scan_line]);
-  putchar('\n');
+  printLine(fd, *enteries, str_number);
  }
+ 
  return 0;
 }
 
-int main(int argc, char *argv[]) {
- if (argc != 2) {
-  fprintf(stderr, "%s \n", argv[0]);
-  return EINVAL;
- }
- int fd = open(argv[1], O_RDONLY);
- if (fd == -1) {
-  fprintf(stderr, "File doesn't open");
-  return EIO;
- }
- Line_entry *table = malloc(sizeof(Line_entry) * (MAX_LINES + 1));
- if (table == NULL) {
-  fprintf(stderr, "Failled to allocate memory\n");
+int main (){
+
+ int fd = open("my_file.txt", O_RDONLY);
+ 
+ if(fd == -1){
+  printf("File cannot be opened./n");
   return -1;
  }
- int table_building = build_table(fd, table, MAX_LINES);
- if (table_building == -1) {
-  fprintf(stderr, "Error at table_building");
-  free(table);
+ off_t enteries[MAX_LINES];
+ int file_size = lseek(fd, 0L, SEK_END);
+ if(file_size == -1){
+  printf("Something went wrong while seeking");
   return -1;
  }
- int out = print_table(fd, table, table_building);
- free(table);
- return out;
+ lseek(fd, 0l, SEEK_SET);
+ int stings_amount = parseFile(fd, file_size, enteries);
+ if(string_amount == -1){
+  printf("Errors while file parsing.\n");
+  return -1;
+ } 
+  int user_status = 1;
+  while(user_status == 1)
+   user_status = user_interaction(fd, enteries, strings_amount);
+ 
+ return 0;
 }
+
