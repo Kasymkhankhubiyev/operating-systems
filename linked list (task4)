@@ -18,7 +18,7 @@ List *init_List(){
  return list;
 }
 
-void pop(List *list) {
+void clear(List *list) {
  List *current_list = list;
  while (current_list) {
   if (current_list->string) {
@@ -38,12 +38,12 @@ void print_strings(List *list) {
  }//while (current_list);
 }
 
-void push(List **list, char *string) {
+int push(List **list, char *string) {
  if (!*list) {
   *list = init_List();
   if (!*list) {
    perror("List didn't init\n");
- exit(-1);
+   return -1;
   }
   (*list)->string = string;
  }
@@ -58,8 +58,8 @@ void push(List **list, char *string) {
   if (!new_list) {
    perror("List can't add more string\n");
    print_strings(*list);
-   pop(*list);
-   exit(-1);
+   clear(*list);
+   return -1;
   }
  }
 }
@@ -86,7 +86,7 @@ int main() {
  while (*(fgets(string, STRING_MAX_SIZE, stdin)) != '.') {
   if(string!= NULL){
    size_t string_lenght = strlen(string);
-   char *tmp = (char *) malloc(string_lenght);
+   char *tmp = (char *) malloc(string_lenght + 1);
    if (tmp) {
     memcpy(tmp, string, string_lenght);
     if (tmp[string_lenght - 1] == '\n') {
@@ -100,6 +100,6 @@ int main() {
   }
  }
   print_strings(list);
-  pop(list);
+  clear(list);
  return 0;
 }
