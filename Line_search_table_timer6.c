@@ -4,8 +4,9 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/time.h>
+#include <signal.h>
 
-#define MAX_BUFF 200
 #define MAX_LINES 100
 
 
@@ -50,7 +51,6 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
    break;
   position += read_str_size; 
  }
- 
  return count;
 
 }
@@ -85,10 +85,17 @@ void printLine(int fd, off_t *enteries, int str_number){
  printf("\n");
 }
 
+void signal_handler(int signum, off_t enteries, int strings_amountб, int fd, int *str_number){
+ printf("5 sec. are over");
+ str_number
+ 
+}
 
 int user_interaction(int fd, off_t *enteries, int strings_amount){
 
  int str_number = 1;
+ 
+ alarm(5) //schedule first alarm after 5 sec.
  while(str_number){
   
   printf("Please, enter non-negative string number: \n");
@@ -105,14 +112,17 @@ int user_interaction(int fd, off_t *enteries, int strings_amount){
   
   if(str_number < 0){
    printf("You inputed a negative number. Try agan \n");
+   alarm(5);
    continue; 
   }
   
   if(str_number > strings_amount){
    printf("You inputed a number over the file bound. \n Please, enter from 1 to %d \n", strings_amount);
+   alarm(5);
    continue;
   }
   printLine(fd, *enteries, str_number);
+  alarm(5); //reset alarm for 5 sec.
  }
  
  return 0;
