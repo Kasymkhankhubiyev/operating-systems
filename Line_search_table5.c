@@ -22,6 +22,7 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
   read_str_size = read(fd, buff, MAX_LINES);
   if(read_str_size == 0){
    printf("FILE is empty./n");
+   close(fd);
    return -1;
   }
   if(read_str_size == -1){
@@ -29,6 +30,7 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
     continue;
    else {
     perror("Error while reading.\n");
+    close(fd);
     return -1;
    }
   }
