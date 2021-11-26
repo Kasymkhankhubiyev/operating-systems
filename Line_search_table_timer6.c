@@ -7,88 +7,83 @@
 #include <sys/time.h>
 #include <signal.h>
 
-#define MAX_LINES 100
-
+#define BUFF_SIZE 100
 
 int parseFile(int fd, int file_size, off_t *strings_arr){
 
  int count = 0;
- char buff[MAX_LINES];
+ char buff[BUFF_SIZE];
  int read_str_size = 0;
- int position = 0;
+ unsigned int position = 0;
+ int indicator = 0;
  
  strings_arr[0] = 0;
  while(1){
   lseek(fd, position, SEEK_SET);
-  read_str_size = read(fd, buff, MAX_LINES);
+  read_str_size = read(fd, buff, BUFF_SIZE);
   if(read_str_size == 0){
    printf("FILE is empty./n");
    return -1;
   }
   if(read_str_size == -1){
-   if(errno == EINTR || errno == EAGAIN) //maybe file was used by another process
-    continue;
-   else {
-    perror("Error while reading.\n");
+   //if(errno == EINTR || errno == EAGAIN) //maybe file was used by another process
+    //continue;
+   //else {
+    //perror("Error while reading.\n");
     return -1;
    }
-  }
+  //}
   
-  int indicator = 0; 
   int i = 0;
   while(i < read_str_size){
    if(buff[i] == '\n'){
     if(indicator == 0){
      strings_arr[0] = i;
      indicator = 1;
-    }
-    count ++;
-    strings_arr[count] = position + i;
+    }else{
+     count ++;
+     strings_arr[count] = position + i;
+    } 
    }
-   i++;  
+   i++;
+   if(i == read_str_read){
+    position = position + string_arr[count] + 1;
+   }
   }
   if(position > file_size)
    break;
-  position += read_str_size; 
  }
  return count;
-
 }
 
 
 void printLine(int fd, off_t *enteries, int str_number){
 
- off_t bytes_amount = enteries[str_number] - enteries[str_number - 1] - 1;
- off_t starter_byte = enteries[str_number - 1] + 1;
+ off_t bytes_amount = enteries[str_number - 1] - enteries[str_number - 2];
+ off_t starter_byte = enteries[str_number - 2] + 1;
  
  if(str_number == 1){
-  bytes_amount = enteries[1];
+  bytes_amount = enteries[0];
   starter_byte = 0;
  }
  
  lseek(fd, starter_byte, SEEK_SET);
- char buff[MAX_LINES];
+ char buff[bytes_amount];
  
  while(bytes_amount > 0){
-  int bytes_read = read(fd, buff, MAX_LINES);
-  bytes_amount -= bytes_read;
+  int bytes_read = read(fd, buff, bytes_amount);
+  bytes_amount = bytes_amount - bytes_read;
   if(bytes_amount >= 0)
    printf("%s", buff);
   else{
    int i = 0;
-   while(i< bytes_amount + bytes_read){
+   while(i< bytes_read){
     printf("%c", buff[i]);
     i ++;
    }  
   } 
  }
  printf("\n");
-}
-
-void signal_handler(int signum, off_t enteries, int strings_amountб, int fd, int *str_number){
- printf("5 sec. are over");
- str_number
- 
 }
 
 int user_interaction(int fd, off_t *enteries, int strings_amount){
@@ -149,21 +144,26 @@ int user_interaction(int fd, off_t *enteries, int strings_amount){
  return 0;
 }
 
-int main (){
+int main (int argc, char *argv[]){
 
- int fd = open("my_file.txt", O_RDONLY);
+ if(argc != 2){
+  printf("not enough arguments.\n");
+  return -1; 
+ }
+ 
+ int fd = open(argv[1], O_RDONLY);
  
  if(fd == -1){
   printf("File cannot be opened./n");
   return -1;
  }
- off_t enteries[MAX_LINES];
+ off_t enteries[BUFF_SIZE];
  int file_size = lseek(fd, 0L, SEEK_END);
  if(file_size == -1){
   printf("Something went wrong while seeking");
   return -1;
  }
- lseek(fd, 0l, SEEK_SET);
+ lseek(fd, 0L, SEEK_SET);
  int stings_amount = parseFile(fd, file_size, enteries);
  if(strings_amount == -1){
   printf("Errors while file parsing.\n");
