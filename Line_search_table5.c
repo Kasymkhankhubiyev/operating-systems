@@ -5,9 +5,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define MAX_BUFF 200
-#define MAX_LINES 100
-
+#define BUFF_SIZE 100
 
 int parseFile(int fd, int file_size, off_t *strings_arr){
 
@@ -22,7 +20,6 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
   read_str_size = read(fd, buff, MAX_LINES);
   if(read_str_size == 0){
    printf("FILE is empty./n");
-   close(fd);
    return -1;
   }
   if(read_str_size == -1){
@@ -30,7 +27,6 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
     continue;
    else {
     perror("Error while reading.\n");
-    close(fd);
     return -1;
    }
   }
@@ -138,6 +134,7 @@ int main (){
  int strings_amount = parseFile(fd, file_size, enteries);
  if(strings_amount == -1){
   printf("Errors while file parsing.\n");
+  close(fd);
   return -1;
  } 
   int user_status = 1;
