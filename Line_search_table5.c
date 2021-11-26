@@ -5,18 +5,18 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define BUFF_SIZE 100
+#define BUFF_SIZE 200
 
 int parseFile(int fd, int file_size, off_t *strings_arr){
 
  int count = 0;
  char buff[BUFF_SIZE];
  int read_str_size = 0;
- int position = 0;
+ unsigned int position = 0;
  
  strings_arr[0] = 0;
- while(1){
-  lseek(fd, position, SEEK_SET);
+ //while(1){
+  //lseek(fd, position, SEEK_SET);
   read_str_size = read(fd, buff, MAX_LINES);
   if(read_str_size == 0){
    printf("FILE is empty./n");
@@ -29,18 +29,19 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
     //perror("Error while reading.\n");
     return -1;
    }
-  }
+  //}
   
   int indicator = 0; 
-  int i = 0;
+  unsigned int i = 0;
   while(i < read_str_size){
    if(buff[i] == '\n'){
     if(indicator == 0){
      strings_arr[0] = i;
      indicator = 1;
+    }else
+     count ++;
+     strings_arr[count] = position + i;
     }
-    count ++;
-    strings_arr[count] = position + i;
    }
    i++;  
   }
@@ -49,19 +50,19 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
   //position += read_str_size; 
  }
  
- return count;
+ return count + 1;
 
 }
 
 
 void printLine(int fd, off_t *enteries, int str_number){
 
- off_t bytes_amount = enteries[str_number - 1] - enteries[str_number - 2] - 1;
+ off_t bytes_amount = enteries[str_number - 1] - enteries[str_number - 2];
  off_t starter_byte = enteries[str_number - 2] + 1;
  
  if(str_number == 1){
   bytes_amount = enteries[0];
-  starter_byte = 0;
+  starter_byte = 0L;
  }
  
  lseek(fd, starter_byte, SEEK_SET);
@@ -74,7 +75,7 @@ void printLine(int fd, off_t *enteries, int str_number){
    printf("%s", buff);
   else{
    int i = 0;
-   while(i< bytes_amount + bytes_read){
+   while(i< bytes_read){
     printf("%c", buff[i]);
     i ++;
    }  
@@ -116,15 +117,20 @@ int user_interaction(int fd, off_t *enteries, int strings_amount){
  return 0;
 }
 
-int main (){
+int main (int argc, char *argv[]){
+ 
+ if(argc != 2){
+  printf("not enough arguments");
+  return -1;
+ }
 
- int fd = open("my_file.txt", O_RDONLY);
+ int fd = open(argv[1], O_RDONLY);
  
  if(fd == -1){
   printf("File cannot be opened./n");
   return -1;
  }
- off_t enteries[MAX_LINES];
+ off_t enteries[BUFF_SIZE];
  int file_size = lseek(fd, 0L, SEEK_END);
  if(file_size == -1){
   printf("Something went wrong while seeking");
