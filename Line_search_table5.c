@@ -13,14 +13,14 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
  char buff[BUFF_SIZE];
  int read_str_size = 0;
  unsigned int position = 0;
+ int indicator = 0;
  
  strings_arr[0] = 0;
- //while(1){
-  //lseek(fd, position, SEEK_SET);
+ while(1){
+  lseek(fd, position, SEEK_SET);
   read_str_size = read(fd, buff, MAX_LINES);
   if(read_str_size == 0){
-   printf("FILE is empty./n");
-   return -1;
+   break;
   }
   if(read_str_size == -1){
    //if(errno == EINTR || errno == EAGAIN) //maybe file was used by another process
@@ -29,9 +29,8 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
     //perror("Error while reading.\n");
     return -1;
    }
-  //}
+  }
   
-  int indicator = 0; 
   unsigned int i = 0;
   while(i < read_str_size){
    if(buff[i] == '\n'){
@@ -44,10 +43,12 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
     }
    }
    i++;  
+   if(i == read_str_read){
+    position = position + string_arr[count] + i;   
+   }
   }
-  //if(position > file_size)
-   //break;
-  //position += read_str_size; 
+  if(position > file_size)
+   break;
  }
  
  return count + 1;
@@ -88,10 +89,11 @@ void printLine(int fd, off_t *enteries, int str_number){
 int user_interaction(int fd, off_t *enteries, int strings_amount){
 
  int str_number = 1;
+ printf("Please, enter non-negative string number from 1 to %d: \n", strings_amount);
+ printf(" Enter 0 to exit.\n");
  while(str_number){
   
-  printf("Please, enter non-negative string number: \n");
-  printf(" Enter 0 to exit.\n");
+  
   scanf("%d", &str_number);
   
   if(str_number == 0){
