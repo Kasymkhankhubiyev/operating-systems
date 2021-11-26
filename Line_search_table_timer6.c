@@ -95,34 +95,55 @@ int user_interaction(int fd, off_t *enteries, int strings_amount){
 
  int str_number = 1;
  
- alarm(5) //schedule first alarm after 5 sec.
- while(str_number){
+ max_fd = 0;
+ fd_set rfds;
+ struct timeval timeout;
+ FD_ZERO (&rfds);
+ FD_SET(0, &rfds);
+ timeout.tv_sec = 5; //seconds
+ timeout.tv_usec = 0; //microseconds
+ int fd_amount = select(max_fd + 1, &rfds, NULL, NULL, &timeout);//reurns the number of fds contained in the three returned descriptor sets
+ if(fd_amount == -1){
+  printf("Error in select( ).\n");
+  return -1;
+ }
+ if(FD_ISSET(fd, &rfds)!= 0){
+  while(str_number){
   
-  printf("Please, enter non-negative string number: \n");
-  printf(" Enter 0 to exit.\n");
-  scanf("%d", &str_number);
+   printf("Please, enter non-negative string number: \n");
+   printf(" Enter 0 to exit.\n");
+   scanf("%d", &str_number);
   
-  if(str_number == 0){
-   if(close(fd) == -1){
-    perror("File close error.\n");
-    return -1;
+   if(str_number == 0){
+    if(close(fd) == -1){
+     perror("File close error.\n");
+     return -1;
+    }
+    break;
    }
-   break;
-  }
   
-  if(str_number < 0){
-   printf("You inputed a negative number. Try agan \n");
-   alarm(5);
-   continue; 
-  }
+   if(str_number < 0){
+    printf("You inputed a negative number. Try agan \n");
+    alarm(5);
+    continue; 
+   }
   
-  if(str_number > strings_amount){
-   printf("You inputed a number over the file bound. \n Please, enter from 1 to %d \n", strings_amount);
-   alarm(5);
-   continue;
+   if(str_number > strings_amount){
+    printf("You inputed a number over the file bound. \n Please, enter from 1 to %d \n", strings_amount);
+    alarm(5);
+    continue;
+   }
+   printLine(fd, *enteries, str_number);
+   alarm(5); //reset alarm for 5 sec.
   }
-  printLine(fd, *enteries, str_number);
-  alarm(5); //reset alarm for 5 sec.
+ }else printf("fd absent in fd_set"\n);
+ if(fd_amount == 0){
+  printf ("Time is over! The whole file is printed:>>   \n");
+  int k = 1;
+  while(k<= strings_amount){
+   printLine(fd, *enteries, k);
+   k++;  
+  }
  }
  
  return 0;
@@ -146,6 +167,7 @@ int main (){
  int stings_amount = parseFile(fd, file_size, enteries);
  if(strings_amount == -1){
   printf("Errors while file parsing.\n");
+  close(fd);
   return -1;
  } 
   int user_status = 1;
