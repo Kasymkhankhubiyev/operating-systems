@@ -10,7 +10,7 @@
 int parseFile(int fd, int file_size, off_t *strings_arr){
 
  int count = 0;
- char buff[MAX_LINES];
+ char buff[BUFF_SIZE];
  int read_str_size = 0;
  int position = 0;
  
@@ -23,10 +23,10 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
    return -1;
   }
   if(read_str_size == -1){
-   if(errno == EINTR || errno == EAGAIN) //maybe file was used by another process
-    continue;
-   else {
-    perror("Error while reading.\n");
+   //if(errno == EINTR || errno == EAGAIN) //maybe file was used by another process
+    //continue;
+   //else {
+    //perror("Error while reading.\n");
     return -1;
    }
   }
@@ -44,9 +44,9 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
    }
    i++;  
   }
-  if(position > file_size)
-   break;
-  position += read_str_size; 
+  //if(position > file_size)
+   //break;
+  //position += read_str_size; 
  }
  
  return count;
@@ -56,20 +56,20 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
 
 void printLine(int fd, off_t *enteries, int str_number){
 
- off_t bytes_amount = enteries[str_number] - enteries[str_number - 1] - 1;
- off_t starter_byte = enteries[str_number - 1] + 1;
+ off_t bytes_amount = enteries[str_number - 1] - enteries[str_number - 2] - 1;
+ off_t starter_byte = enteries[str_number - 2] + 1;
  
  if(str_number == 1){
-  bytes_amount = enteries[1];
+  bytes_amount = enteries[0];
   starter_byte = 0;
  }
  
  lseek(fd, starter_byte, SEEK_SET);
- char buff[MAX_LINES];
+ char buff[bytes_amount];
  
  while(bytes_amount > 0){
-  int bytes_read = read(fd, buff, MAX_LINES);
-  bytes_amount -= bytes_read;
+  int bytes_read = read(fd, buff, bytes_amount);
+  bytes_amount = bytes_amount - bytes_read;
   if(bytes_amount >= 0)
    printf("%s", buff);
   else{
