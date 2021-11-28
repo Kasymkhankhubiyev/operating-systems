@@ -7,7 +7,7 @@
 #include <sys/time.h>
 #include <signal.h>
 
-#define BUFF_SIZE 100
+#define BUFF_SIZE 200
 
 int parseFile(int fd, int file_size, off_t *strings_arr){
 
