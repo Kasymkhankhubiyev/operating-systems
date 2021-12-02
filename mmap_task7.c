@@ -10,56 +10,41 @@
 
 #define BUFF_SIZE 200
 
-int parseFile(int fd, int file_size, off_t *strings_arr){
+int parseFile(int fd, char* map, int file_size, off_t *strings_arr){
 
  int count = 0;
- char buff[BUFF_SIZE];
- int read_str_size = 0;
- unsigned int position = 0;
+ //int read_str_size = 0;
+ //unsigned int position = 0;
  int indicator = 0;
  
  strings_arr[0] = 0;
- while(1){
-   lseek(fd, position, SEEK_SET);
-   read_str_size = read(fd, buff, BUFF_SIZE);
-   if(read_str_size == 0){
-     break;
-   }
-   if(read_str_size == -1){
-     if(errno == EINTR || errno == EAGAIN) //maybe file was used by another process
-        continue;
-     else {
-       perror("Error while reading.\n");
-       return -1;
-     }
-   }
-  
+ //while(1){
    int controller = 0;
    unsigned int i = 0;
-   while(i < read_str_size){
-     if(buff[i] == '\n'){
+   while(i < file_size){
+     if(map[i] == '\n'){
        if(indicator == 0){
          strings_arr[0] = i;
          indicator = 1;
-         controller ++;
+         //controller ++;
        }else{
           count ++;
-          controller ++;
-          strings_arr[count] = position + i;
+          //controller ++;
+          strings_arr[count] = i; //position + i;
        } 
      }
      i++;
-     if(i == read_str_size){
-       if(controller == 0){
-         printf("The string number %d is too long\n");
-         return -1;
-       }
-       position = position + strings_arr[count] + 1;
-     }
+     //if(i == read_str_size){
+       //if(controller == 0){
+       //  printf("The string number %d is too long\n");
+        // return -1;
+       //}
+       //position = position + strings_arr[count] + 1;
+     //}
    }
-   if(position > file_size)
-     break;
- }
+   //if(position > file_size)
+   //  break;
+ //}
  return count + 1;
 }
 
@@ -203,7 +188,7 @@ int main (int argc, char *argv[]){
     return closefile(fd);
   }
   
-  int stings_amount = parseFile(fd, file_size, enteries);
+  int stings_amount = parseFile(fd, map, file_info.st_size, enteries);
   if(strings_amount == -1){
     printf("Errors while file parsing.\n");
     close(fd);
