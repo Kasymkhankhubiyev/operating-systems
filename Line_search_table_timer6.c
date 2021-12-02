@@ -33,21 +33,24 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
      }
    }
   
+   int controller = 0;
    unsigned int i = 0;
    while(i < read_str_size){
      if(buff[i] == '\n'){
        if(indicator == 0){
          strings_arr[0] = i;
          indicator = 1;
+         controller ++;
        }else{
           count ++;
+          controller ++;
           strings_arr[count] = position + i;
        } 
      }
      i++;
      if(i == read_str_size){
-       if(count == 0){
-         printf("too long sentence for the buffer/n");
+       if(controller == 0){
+         printf("The string number %d is too long\n");
          return -1;
        }
        position = position + strings_arr[count] + 1;
@@ -93,14 +96,14 @@ int closefile(int fd){
 
   if(close(fd) == -1){
       if(errno == EINTR){
-          printf("The close() call was interrupted by a signal/n");
+          printf("The close() call was interrupted by a signal\n");
           return -1;
       }else{
           if(errno == EIO){
-              printf("An I/O error occured/n");
+              printf("An I/O error occured\n");
               return -1;
           }else{
-              printf("Close() ended with error");
+              printf("Close() ended with error\n");
               return -1;
           }
       }
@@ -173,13 +176,13 @@ int main (int argc, char *argv[]){
   int fd = open(argv[1], O_RDONLY);
  
   if(fd == -1){
-    printf("File cannot be opened./n");
+    printf("File cannot be opened.\n");
     return -1;
   }
   off_t enteries[BUFF_SIZE];
   int file_size = lseek(fd, 0L, SEEK_END);
   if(file_size == -1){
-    printf("Something went wrong while seeking");
+    printf("Something went wrong while seeking\n");
     return -1;
   }
   lseek(fd, 0L, SEEK_SET);
