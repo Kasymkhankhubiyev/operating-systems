@@ -19,47 +19,46 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
  
  strings_arr[0] = 0;
  while(1){
-  lseek(fd, position, SEEK_SET);
-  read_str_size = read(fd, buff, BUFF_SIZE);
-  if(read_str_size == 0){
-   printf("FILE is empty./n");
-   return -1;
-  }
-  if(read_str_size == -1){
-   //if(errno == EINTR || errno == EAGAIN) //maybe file was used by another process
-    //continue;
-   //else {
-    //perror("Error while reading.\n");
-    return -1;
+   lseek(fd, position, SEEK_SET);
+   read_str_size = read(fd, buff, BUFF_SIZE);
+   if(read_str_size == 0){
+     break;
    }
-  //}
+   if(read_str_size == -1){
+     if(errno == EINTR || errno == EAGAIN) //maybe file was used by another process
+        continue;
+     else {
+       perror("Error while reading.\n");
+       return -1;
+     }
+   }
   
-  int i = 0;
-  while(i < read_str_size){
-   if(buff[i] == '\n'){
-    if(indicator == 0){
-     strings_arr[0] = i;
-     indicator = 1;
-    }else{
-     count ++;
-     strings_arr[count] = position + i;
-    } 
+   unsigned int i = 0;
+   while(i < read_str_size){
+     if(buff[i] == '\n'){
+       if(indicator == 0){
+         strings_arr[0] = i;
+         indicator = 1;
+       }else{
+          count ++;
+          strings_arr[count] = position + i;
+       } 
+     }
+     i++;
+     if(i == read_str_read){
+       position = position + string_arr[count] + 1;
+     }
    }
-   i++;
-   if(i == read_str_read){
-    position = position + string_arr[count] + 1;
-   }
-  }
-  if(position > file_size)
-   break;
+   if(position > file_size)
+     break;
  }
- return count;
+ return count + 1;
 }
 
 
 void printLine(int fd, off_t *enteries, int str_number){
 
- off_t bytes_amount = enteries[str_number - 1] - enteries[str_number - 2];
+ off_t bytes_amount = enteries[str_number - 1] - enteries[str_number - 2] - 1;
  off_t starter_byte = enteries[str_number - 2] + 1;
  
  if(str_number == 1){
@@ -85,6 +84,26 @@ void printLine(int fd, off_t *enteries, int str_number){
  }
  printf("\n");
 }
+
+int closefile(int fd){
+
+  if(close(fd) == -1){
+      if(errno == EINTR){
+          printf("The close() call was interrupted by a signal/n");
+          return -1;
+      }else{
+          if(errno == EIO){
+              printf("An I/O error occured/n");
+              return -1;
+          }else{
+              printf("Close() ended with error");
+              return -1;
+          }
+      }
+  }
+  return 0;
+}
+
 
 int user_interaction(int fd, off_t *enteries, int strings_amount){
 
@@ -119,7 +138,6 @@ int user_interaction(int fd, off_t *enteries, int strings_amount){
   
    if(str_number < 0){
     printf("You inputed a negative number. Try agan \n");
-    alarm(5);
     continue; 
    }
   
