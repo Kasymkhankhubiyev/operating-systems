@@ -44,7 +44,7 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
       }
     }
     i++;  
-    if(i == read_str_read){
+    if(i == read_str_size){
       position = position + string_arr[count] + 1;   
     }
   }
