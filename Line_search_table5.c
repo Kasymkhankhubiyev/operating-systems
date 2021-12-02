@@ -23,64 +23,63 @@ int parseFile(int fd, int file_size, off_t *strings_arr){
    break;
   }
   if(read_str_size == -1){
-   //if(errno == EINTR || errno == EAGAIN) //maybe file was used by another process
-    //continue;
-   //else {
-    //perror("Error while reading.\n");
+   if(errno == EINTR || errno == EAGAIN) //EINTR - stopped by a signal
+    //EAGAIN - no data to read (usually returned if fd is in a nonblock state)
+    continue;
+   else {
+    perror("Error while reading.\n");
     return -1;
    }
   }
   
   unsigned int i = 0;
   while(i < read_str_size){
-   if(buff[i] == '\n'){
-    if(indicator == 0){
-     strings_arr[0] = i;
-     indicator = 1;
-    }else
-     count ++;
-     strings_arr[count] = position + i;
+    if(buff[i] == '\n'){
+      if(indicator == 0){
+        strings_arr[0] = i;
+        indicator = 1;
+      }else
+        count ++;
+        strings_arr[count] = position + i;
+      }
     }
-   }
-   i++;  
-   if(i == read_str_read){
-    position = position + string_arr[count] + i;   
-   }
+    i++;  
+    if(i == read_str_read){
+      position = position + string_arr[count] + 1;   
+    }
   }
   if(position > file_size)
-   break;
- }
- 
- return count + 1;
-
+    break;
+  }
+  return count + 1;
 }
 
 
 void printLine(int fd, off_t *enteries, int str_number){
 
- off_t bytes_amount = enteries[str_number - 1] - enteries[str_number - 2];
+ off_t bytes_amount = enteries[str_number - 1] - enteries[str_number - 2] - 1;
  off_t starter_byte = enteries[str_number - 2] + 1;
  
  if(str_number == 1){
-  bytes_amount = enteries[0];
-  starter_byte = 0L;
+   bytes_amount = enteries[0];
+   starter_byte = 0L;
  }
  
  lseek(fd, starter_byte, SEEK_SET);
  char buff[bytes_amount];
  
  while(bytes_amount > 0){
-  int bytes_read = read(fd, buff, bytes_amount);
-  bytes_amount = bytes_amount - bytes_read;
-  if(bytes_amount >= 0)
-   printf("%s", buff);
-  else{
-   int i = 0;
-   while(i< bytes_read){
-    printf("%c", buff[i]);
-    i ++;
-   }  
-  } 
+   int bytes_read = read(fd, buff, bytes_amount);
+   bytes_amount = bytes_amount - bytes_read;
+   if(bytes_amount >= 0)
+     printf("%s", buff);
+   else{
+     int i = 0;
+     while(i< bytes_read){
+       printf("%c", buff[i]);
+       i ++;
+     }  
+   } 
  }
  printf("\n");
 }
@@ -93,62 +92,74 @@ int user_interaction(int fd, off_t *enteries, int strings_amount){
  printf(" Enter 0 to exit.\n");
  while(str_number){
   
+   scanf("%d", &str_number);
   
-  scanf("%d", &str_number);
-  
-  if(str_number == 0){
-   if(close(fd) == -1){
-    perror("File close error.\n");
-    return -1;
+   if(str_number == 0){
+     break;
    }
-   break;
-  }
   
-  if(str_number < 0){
-   printf("You inputed a negative number. Try agan \n");
-   continue; 
-  }
+   if(str_number < 0){
+     printf("You inputed a negative number. Try agan \n");
+     continue; 
+   }
   
-  if(str_number > strings_amount){
-   printf("You inputed a number over the file bound. \n Please, enter from 1 to %d \n", strings_amount);
-   continue;
-  }
-  printLine(fd, enteries, str_number);
+   if(str_number > strings_amount){
+     printf("You inputed a number over the file bound. \n Please, enter from 1 to %d \n", strings_amount);
+     continue;
+   }
+   printLine(fd, enteries, str_number);
  }
- 
  return 0;
+}
+
+int closefile(int fd){
+
+  if(close(fd) == -1){
+      if(errno == EINTR){
+          printf("The close() call was interrupted by a signal/n");
+          return -1;
+      }else{
+          if(errno == EIO){
+              printf("An I/O error occured/n");
+              return -1;
+          }else{
+              printf("Close() ended with error");
+              return -1;
+          }
+      }
+  }
+  return 0;
 }
 
 int main (int argc, char *argv[]){
  
  if(argc != 2){
-  printf("not enough arguments");
-  return -1;
+   printf("not enough arguments");
+   return -1;
  }
 
  int fd = open(argv[1], O_RDONLY);
  
  if(fd == -1){
-  printf("File cannot be opened./n");
-  return -1;
+   printf("File cannot be opened./n");
+   return -1;
  }
  off_t enteries[BUFF_SIZE];
  int file_size = lseek(fd, 0L, SEEK_END);
  if(file_size == -1){
-  printf("Something went wrong while seeking");
-  return -1;
+   printf("Something went wrong while seeking");
+   return -1;
  }
  lseek(fd, 0l, SEEK_SET);
  int strings_amount = parseFile(fd, file_size, enteries);
  if(strings_amount == -1){
-  printf("Errors while file parsing.\n");
-  close(fd);
-  return -1;
+   printf("Errors while file parsing.\n");
+   close(fd);
+   return -1;
  } 
   int user_status = 1;
   while(user_status == 1)
-   user_status = user_interaction(fd, enteries, strings_amount);
- 
- return 0;
+    user_status = user_interaction(fd, enteries, strings_amount);
+ return closefile(fd);
 }
 
