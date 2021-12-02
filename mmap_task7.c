@@ -6,19 +6,17 @@
 #include <stdlib.h>
 #include <sys/time.h>
 #include <signal.h>
-#include <sys/mmap.h>
+#include <sys/mman.h>
 
 #define BUFF_SIZE 200
 
 int parseFile(int fd, char* map, int file_size, off_t *strings_arr){
 
  int count = 0;
- //int read_str_size = 0;
- //unsigned int position = 0;
  int indicator = 0;
  
  strings_arr[0] = 0;
- //while(1){
+ 
    int controller = 0;
    unsigned int i = 0;
    while(i < file_size){
@@ -26,55 +24,39 @@ int parseFile(int fd, char* map, int file_size, off_t *strings_arr){
        if(indicator == 0){
          strings_arr[0] = i;
          indicator = 1;
-         //controller ++;
        }else{
           count ++;
-          //controller ++;
           strings_arr[count] = i; //position + i;
        } 
      }
      i++;
-     //if(i == read_str_size){
-       //if(controller == 0){
-       //  printf("The string number %d is too long\n");
-        // return -1;
-       //}
-       //position = position + strings_arr[count] + 1;
-     //}
    }
    //if(position > file_size)
    //  break;
  //}
+ if(nummap(map, file_size) == -1){
+   printf("Error in-mapping the file");
+   return -1;
+ }
  return count + 1;
 }
 
 
-void printLine(int fd, off_t *enteries, int str_number){
+void printLine(off_t *enteries, int str_number, char *map){
 
- off_t bytes_amount = enteries[str_number - 1] - enteries[str_number - 2] - 1;
- off_t starter_byte = enteries[str_number - 2] + 1;
+  off_t bytes_amount = enteries[str_number - 1] - enteries[str_number - 2] - 1;
+  off_t starter_byte = enteries[str_number - 2] + 1;
  
- if(str_number == 1){
-  bytes_amount = enteries[0];
-  starter_byte = 0;
- }
+  if(str_number == 1){
+    bytes_amount = enteries[0];
+    starter_byte = 0;
+  }
  
- lseek(fd, starter_byte, SEEK_SET);
- char buff[bytes_amount];
- 
- while(bytes_amount > 0){
-  int bytes_read = read(fd, buff, bytes_amount);
-  bytes_amount = bytes_amount - bytes_read;
-  if(bytes_amount >= 0)
-   printf("%s", buff);
-  else{
-   int i = 0;
-   while(i< bytes_read){
+  unsigned int i = 0;
+  while(i < bytes_amount){
     printf("%c", buff[i]);
     i ++;
-   }  
-  } 
- }
+  }
  printf("\n");
 }
 
@@ -98,7 +80,7 @@ int closefile(int fd){
 }
 
 
-int user_interaction(int fd, off_t *enteries, int strings_amount){
+int user_interaction(char *map, int fd, off_t *enteries, int strings_amount){
 
  int str_number = 1;
  
@@ -122,10 +104,6 @@ int user_interaction(int fd, off_t *enteries, int strings_amount){
     scanf("%d", &str_number);
   
     if(str_number == 0){
-      if(close(fd) == -1){
-        perror("File close error.\n");
-        return -1;
-      }
       break;
     }
   
@@ -138,14 +116,14 @@ int user_interaction(int fd, off_t *enteries, int strings_amount){
       printf("You inputed a number over the file bound. \n Please, enter from 1 to %d \n", strings_amount);
       continue;
     }
-    printLine(fd, enteries, str_number);
+    printLine(enteries, str_number, map);
    }
  }else {
    //printf("fd absent in fd_set\n");
    printf ("Time is over! The whole file is printed:>>   \n");
    int k = 1;
    while(k<= strings_amount){
-     printLine(fd, enteries, k);
+     printLine(enteries, k, map);
      k++;  
    }
  }
@@ -196,7 +174,7 @@ int main (int argc, char *argv[]){
   } 
   int user_status = 1;
   while(user_status == 1)
-    user_status = user_interaction(fd, enteries, strings_amount);
+    user_status = user_interaction(char* map, enteries, strings_amount);
  
  return closefile(fd);
 }
