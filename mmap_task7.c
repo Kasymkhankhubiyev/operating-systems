@@ -181,12 +181,28 @@ int main (int argc, char *argv[]){
     return -1;
   }
   off_t enteries[BUFF_SIZE];
-  int file_size = lseek(fd, 0L, SEEK_END);
-  if(file_size == -1){
-    printf("Something went wrong while seeking\n");
+ 
+  struct stat file_info;
+  if(fstat(fd, file_info) == -1){
+    if(errno == EACCES){//запрещен доступ
+      printf("Acces to file is denied./n");
+      return -1;
+    }else{
+      printf("error while getting the size of file.\n");
+      return -1;
+    }
+  }
+  if(file_info.st_size == 0){
+    printf("File is empty.\n");
     return -1;
   }
-  lseek(fd, 0L, SEEK_SET);
+ 
+  char* map = mmap(0, file_info.st_size, PROT_READ, MAP_SHARED, fd, 0L);
+  if(map == MAP_FAILED){
+    printf ("Error while mapping the file\n");
+    return closefile(fd);
+  }
+  
   int stings_amount = parseFile(fd, file_size, enteries);
   if(strings_amount == -1){
     printf("Errors while file parsing.\n");
