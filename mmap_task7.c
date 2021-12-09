@@ -12,33 +12,17 @@
 
 int parseFile(int fd, char* map, int file_size, off_t *strings_arr){
 
- int count = 0;
- int indicator = 0;
- 
- strings_arr[0] = 0;
- 
-   int controller = 0;
-   unsigned int i = 0;
-   while(i < file_size){
-     if(map[i] == '\n'){
-       if(indicator == 0){
-         strings_arr[0] = i;
-         indicator = 1;
-       }else{
-          count ++;
-          strings_arr[count] = i; //position + i;
-       } 
-     }
-     i++;
-   }
-   //if(position > file_size)
-   //  break;
- //}
- if(nummap(map, file_size) == -1){
-   printf("Error in-mapping the file");
-   return -1;
- }
- return count + 1;
+  int count = 0; 
+  strings_arr[0] = 0;
+  unsigned int i = 0;
+  while(i < file_size){
+    if(map[i] == '\n'){
+      strings_arr[0] = i;
+      count ++;
+    }
+    i++;
+  }
+  return count;
 }
 
 
@@ -52,9 +36,9 @@ void printLine(off_t *enteries, int str_number, char *map){
     starter_byte = 0;
   }
  
-  unsigned int i = 0;
+  off_t i = 0;
   while(i < bytes_amount){
-    printf("%c", buff[i]);
+    printf("%c", map[starter_byte + i]);
     i ++;
   }
  printf("\n");
@@ -119,7 +103,6 @@ int user_interaction(char *map, int fd, off_t *enteries, int strings_amount){
     printLine(enteries, str_number, map);
    }
  }else {
-   //printf("fd absent in fd_set\n");
    printf ("Time is over! The whole file is printed:>>   \n");
    int k = 1;
    while(k<= strings_amount){
@@ -160,7 +143,7 @@ int main (int argc, char *argv[]){
     return -1;
   }
  
-  char* map = mmap(0, file_info.st_size, PROT_READ, MAP_SHARED, fd, 0L);
+  char *map = mmap(0, file_info.st_size, PROT_READ, MAP_SHARED, fd, 0L);
   if(map == MAP_FAILED){
     printf ("Error while mapping the file\n");
     return closefile(fd);
@@ -169,12 +152,14 @@ int main (int argc, char *argv[]){
   int stings_amount = parseFile(fd, map, file_info.st_size, enteries);
   if(strings_amount == -1){
     printf("Errors while file parsing.\n");
-    close(fd);
-    return -1;
+    return closefile(fd);
   } 
   int user_status = 1;
   while(user_status == 1)
     user_status = user_interaction(char* map, enteries, strings_amount);
- 
+ if(nummap(map, file_info.st_size) == -1){
+   printf("Error in un-mupping file/n");
+   return -1;
+ }
  return closefile(fd);
 }
