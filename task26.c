@@ -35,11 +35,6 @@ int main (int argc, char *argv[]){
         i++;
     }
 
-    if(fwrite(buf, bytes_read, 1, stdout) == -1){
-        printf("Error in fwrite()");
-        return -3;
-    }
-
     status = pclose(pipe);
     if(WIFEXITED(status)){
         printf("\nChild exit status: %ld\n", WEXITSTATUS(status));
@@ -51,6 +46,10 @@ int main (int argc, char *argv[]){
         printf("Error while pipe closing");
         return -1;
     }
-
+                                                                            
+    if(fwrite(buf, bytes_read, 1, stdout) == -1){
+        printf("Error in fwrite()");
+        return -3;
+    }
     return 0;
 }
